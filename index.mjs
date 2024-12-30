@@ -7,19 +7,23 @@ const myServer = http.createServer((req, res) => {
   const activeurl = req.url;
   //get the method the user is using
   const method = req.method.toLowerCase();
+  //get the headers
+  const reqHeader = req.headers;
 
   //parse the url(to break it into its parts)
   const parsedUrl = url.parse(activeurl, true);
-  console.log(parsedUrl);
   //get the url pathname
   const urlPathname = parsedUrl.pathname;
+  //get the url query string
+  const queryString = parsedUrl.query;
+
   //trim url to remove excess slashes
   const trimmedUrl = urlPathname.replace(/^\/+\/+$/g, "");
   console.log(trimmedUrl);
   // return a response telling the user they've been rediected to another url.
-  res.end(
-    `Hello, you have been redirected to: ${trimmedUrl} method:${method} `
-  );
+  res.end(`Hello, you have been redirected to: ${trimmedUrl} method:${method}`);
+  console.log("req comes with this headers: ", reqHeader);
+  console.log("req comes with this query: ", queryString);
 });
 
 myServer.listen(4190, () => {
