@@ -1,6 +1,7 @@
 import * as http from "http";
 import url from "node:url";
 import { StringDecoder } from "node:string_decoder";
+import { env } from "./config.mjs";
 
 //this server should responed to all requests with a string
 const myServer = http.createServer((req, res) => {
@@ -82,14 +83,9 @@ const myServer = http.createServer((req, res) => {
         console.log("unknownerror", error);
       }
     }
-
-    // return a response telling the user they've been rediected to another url.
-    // res.end(
-    //   `Hello, you have been redirected to: ${trimmedUrl} method:${method}`
-    // );
   });
 });
 
-myServer.listen(4190, () => {
-  console.log("listeneing on port 419 now");
+myServer.listen(env.port, () => {
+  console.log(`now listening on port: ${env.port}, ${env.env_name} environment`);
 });
