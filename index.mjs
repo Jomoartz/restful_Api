@@ -30,17 +30,62 @@ const myServer = http.createServer((req, res) => {
     const queryString = parsedUrl.query;
 
     //trim url to remove excess slashes
-    const trimmedUrl = urlPathname.replace(/^\/+\/+$/g, "");
+    const trimmedUrl = urlPathname.replace(/^\/+|\/+$/g, "");
 
-    console.log(trimmedUrl);
-    console.log("req comes with this headers: ", reqHeader);
-    console.log("req comes with this query: ", queryString);
-    console.log("req comes with this payload:", payload);
+    //store data we wish to send to  our chosen handler
+    const data = {
+      "trimmed path": trimmedUrl,
+      "query string": queryString,
+      method: method,
+      headers: reqHeader,
+      payload: payload,
+    };
+
+    let handler = {};
+    handler.sample = (data, callback) => {
+      callback(200, { name: data });
+    };
+    handler.foo = (data, callback) => {
+      callback(404, { Alert: "page is under development" });
+    };
+    handler.notFound = (data, callback) => {
+      callback(404);
+    };
+    const routes = {
+      sample: handler.sample,
+      notFound: handler.notFound,
+    };
+    const chooseHandler =
+      typeof routes[trimmedUrl] !== "undefined"
+        ? routes[trimmedUrl]
+        : routes.notFound;
+
+    try {
+      chooseHandler(data, (statuscode, rpayload) => {
+        //set defaults for payload and status codes
+        rpayload = typeof rpayload == "object" ? rpayload : {};
+        statuscode = typeof statuscode == "number" ? statuscode : 404;
+        //ensure payload is inn json
+        const jsonPayload = JSON.stringify(rpayload);
+
+        res.writeHead(statuscode);
+        res.end(jsonPayload);
+        console.log("returning this response:", jsonPayload, statuscode);
+      });
+    } catch (error) {
+      if (trimmedUrl == undefined) {
+        console.log("url is undefined");
+      } else if (trimmedUrl in routes == false) {
+        console.log(`trimmed url does not match any route`);
+      } else {
+        console.log("unknownerror", error);
+      }
+    }
 
     // return a response telling the user they've been rediected to another url.
-    res.end(
-      `Hello, you have been redirected to: ${trimmedUrl} method:${method}`
-    );
+    // res.end(
+    //   `Hello, you have been redirected to: ${trimmedUrl} method:${method}`
+    // );
   });
 });
 
