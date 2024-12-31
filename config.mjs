@@ -21,5 +21,4 @@ const chosenEnv =
 //Set environment variable based on chosen env
 const env =
   chosenEnv in environment ? environment[chosenEnv] : environment.development;
-console.log("config_error catcher:", chosenEnv);
 export { env };

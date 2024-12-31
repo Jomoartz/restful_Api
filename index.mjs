@@ -76,9 +76,14 @@ const universalServerhandler = (req, res) => {
     handler.notFound = (data, callback) => {
       callback(404);
     };
+    handler.ping = (data, callback) => {
+      callback(200);
+    };
     const routes = {
       sample: handler.sample,
       notFound: handler.notFound,
+      ping: handler.ping,
+      foo: handler.foo,
     };
     const chooseHandler =
       typeof routes[trimmedUrl] !== "undefined"
