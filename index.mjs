@@ -1,10 +1,34 @@
 import * as http from "http";
+import * as https from "https";
 import url from "node:url";
 import { StringDecoder } from "node:string_decoder";
 import { env } from "./config.mjs";
+import fs from "fs";
 
-//this server should responed to all requests with a string
-const myServer = http.createServer((req, res) => {
+//initiate http servers
+const httpServer = http.createServer((req, res) => {
+  universalServerhandler(req, res);
+});
+//start http server
+httpServer.listen(env.httpPort, () => {
+  console.log(`now listening on port: ${env.httpPort}`);
+});
+
+const httpsSeverOptions = {
+  key: fs.readFileSync("./https/key.pem"),
+  cert: fs.readFileSync("./https/cert.pem"),
+};
+//initiate https server
+const httpsServer = https.createServer(httpsSeverOptions, (req, res) => {
+  universalServerhandler(req, res);
+});
+//start https server
+httpsServer.listen(env.httpsPort, () => {
+  console.log(`now listening on port: ${env.httpsPort} `);
+});
+
+//handle server requests and responses
+const universalServerhandler = (req, res) => {
   //get the requests url
   const activeurl = req.url;
   //get the method the user is using
@@ -84,8 +108,4 @@ const myServer = http.createServer((req, res) => {
       }
     }
   });
-});
-
-myServer.listen(env.port, () => {
-  console.log(`now listening on port: ${env.port}, ${env.env_name} environment`);
-});
+};

@@ -1,12 +1,14 @@
 let environment = {};
 
 environment.development = {
-  port: 4190,
+  httpPort: 4190,
+  httpsPort: 4191,
   env_name: "Development",
 };
 
 environment.production = {
-  port: 3000,
+  httpPort: 3000,
+  httpsPort: 3001,
   env_name: "Production",
 };
 
@@ -19,5 +21,5 @@ const chosenEnv =
 //Set environment variable based on chosen env
 const env =
   chosenEnv in environment ? environment[chosenEnv] : environment.development;
-
+console.log("config_error catcher:", chosenEnv);
 export { env };
