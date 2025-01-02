@@ -16,15 +16,7 @@ const helloWorldServer = http.createServer((req, res) => {
 // });
 
 //Test data module
-data.create(
+data.read(
   "test",
-  "newFile2",
-  { test_result: "data is saved succesfully" },
-  (err) => {
-    if (err) {
-      console.error("Error:", err);
-    } else {
-      console.log("File created successfully!");
-    }
-  }
+  "newFile2",(result)=>console.log(result)
 );
