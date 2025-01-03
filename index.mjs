@@ -3,114 +3,98 @@ import * as https from "https";
 import url from "node:url";
 import { StringDecoder } from "node:string_decoder";
 import { env } from "./config.mjs";
-import fs from "fs";
+import fs from "fs/promises";
 
-//initiate http servers
-const httpServer = http.createServer((req, res) => {
-  universalServerhandler(req, res);
+// Initiate HTTP server
+const httpServer = http.createServer(async (req, res) => {
+  await universalServerHandler(req, res);
 });
-//start http server
+// Start HTTP server
 httpServer.listen(env.httpPort, () => {
-  console.log(`now listening on port: ${env.httpPort}`);
+  console.log(`Now listening on port: ${env.httpPort}`);
 });
 
-const httpsSeverOptions = {
-  key: fs.readFileSync("./https/key.pem"),
-  cert: fs.readFileSync("./https/cert.pem"),
+// Options for HTTPS server
+const httpsServerOptions = {
+  key: await fs.readFile("./https/key.pem"),
+  cert: await fs.readFile("./https/cert.pem"),
 };
-//initiate https server
-const httpsServer = https.createServer(httpsSeverOptions, (req, res) => {
-  universalServerhandler(req, res);
+// Initiate HTTPS server
+const httpsServer = https.createServer(httpsServerOptions, async (req, res) => {
+  await universalServerHandler(req, res);
 });
-//start https server
+// Start HTTPS server
 httpsServer.listen(env.httpsPort, () => {
-  console.log(`now listening on port: ${env.httpsPort} `);
+  console.log(`Now listening on port: ${env.httpsPort}`);
 });
 
-//handle server requests and responses
-const universalServerhandler = (req, res) => {
-  //get the requests url
-  const activeurl = req.url;
-  //get the method the user is using
+// Handle server requests and responses
+const universalServerHandler = async (req, res) => {
+  // Get the request URL
+  const activeUrl = req.url;
+  // Get the method the user is using
   const method = req.method.toLowerCase();
-  //get the headers
+  // Get the headers
   const reqHeader = req.headers;
-  //initialize a decoder
+  // Initialize a decoder
   const decoder = new StringDecoder("utf8");
-  //get the payload
-  let payload = ""; //variabe to store the payload
-  req.on("data", (data) => {
-    //decode the data to utf-8 charset
-    payload += decoder.write(data);
-  });
-  //listen for when payload is done sending
-  req.on("end", () => {
-    payload += decoder.end();
+  // Get the payload
+  let payload = ""; // Variable to store the payload
 
-    //parse the url(to break it into its parts)
-    const parsedUrl = url.parse(activeurl, true);
-    //get the url pathname
-    const urlPathname = parsedUrl.pathname;
-    //get the url query string
-    const queryString = parsedUrl.query;
+  for await (const chunk of req) {
+    payload += decoder.write(chunk);
+  }
+  payload += decoder.end();
 
-    //trim url to remove excess slashes
-    const trimmedUrl = urlPathname.replace(/^\/+|\/+$/g, "");
+  // Parse the URL (to break it into its parts)
+  const parsedUrl = url.parse(activeUrl, true);
+  // Get the URL pathname
+  const urlPathname = parsedUrl.pathname;
+  // Get the URL query string
+  const queryString = parsedUrl.query;
 
-    //store data we wish to send to  our chosen handler
-    const data = {
-      "trimmed path": trimmedUrl,
-      "query string": queryString,
-      method: method,
-      headers: reqHeader,
-      payload: payload,
-    };
+  // Trim URL to remove excess slashes
+  const trimmedUrl = urlPathname.replace(/^\/+|\/+$/g, "");
 
-    let handler = {};
-    handler.sample = (data, callback) => {
-      callback(200, { name: data });
-    };
-    handler.foo = (data, callback) => {
-      callback(404, { Alert: "page is under development" });
-    };
-    handler.notFound = (data, callback) => {
-      callback(404);
-    };
-    handler.ping = (data, callback) => {
-      callback(200);
-    };
-    const routes = {
-      sample: handler.sample,
-      notFound: handler.notFound,
-      ping: handler.ping,
-      foo: handler.foo,
-    };
-    const chooseHandler =
-      typeof routes[trimmedUrl] !== "undefined"
-        ? routes[trimmedUrl]
-        : routes.notFound;
+  // Store data we wish to send to our chosen handler
+  const data = {
+    "trimmed path": trimmedUrl,
+    "query string": queryString,
+    method: method,
+    headers: reqHeader,
+    payload: payload,
+  };
 
-    try {
-      chooseHandler(data, (statuscode, rpayload) => {
-        //set defaults for payload and status codes
-        rpayload = typeof rpayload == "object" ? rpayload : {};
-        statuscode = typeof statuscode == "number" ? statuscode : 404;
-        //ensure payload is inn json
-        const jsonPayload = JSON.stringify(rpayload);
+  const handler = {
+    sample: async (data) => [200, { name: data }],
+    foo: async () => [404, { Alert: "page is under development" }],
+    notFound: async () => [404],
+    ping: async () => [200],
+  };
 
-        res.setHeader("Content-Type", "application/json");
-        res.writeHead(statuscode);
-        res.end(jsonPayload);
-        console.log("returning this response:", jsonPayload, statuscode);
-      });
-    } catch (error) {
-      if (trimmedUrl == undefined) {
-        console.log("url is undefined");
-      } else if (trimmedUrl in routes == false) {
-        console.log(`trimmed url does not match any route`);
-      } else {
-        console.log("unknownerror", error);
-      }
-    }
-  });
+  const routes = {
+    sample: handler.sample,
+    notFound: handler.notFound,
+    ping: handler.ping,
+    foo: handler.foo,
+  };
+  const chooseHandler =
+    typeof routes[trimmedUrl] !== "undefined"
+      ? routes[trimmedUrl]
+      : routes.notFound;
+
+  try {
+    const [statusCode, rPayload] = await chooseHandler(data);
+    // Set defaults for payload and status codes
+    const jsonPayload = JSON.stringify(rPayload || {});
+
+    res.setHeader("Content-Type", "application/json");
+    res.writeHead(statusCode || 404);
+    res.end(jsonPayload);
+    console.log("Returning this response:", jsonPayload, statusCode);
+  } catch (error) {
+    console.error("Error handling request:", error);
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Internal Server Error" }));
+  }
 };
