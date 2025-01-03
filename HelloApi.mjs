@@ -16,7 +16,7 @@ const helloWorldServer = http.createServer((req, res) => {
 // });
 
 //Test data module
-data.update(
+data.create(
   "test",
-  "newFile2",{new_data: 'data updated successfully'}
+  "newFile1",{data: 'file created'}
 );
