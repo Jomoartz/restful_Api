@@ -16,7 +16,4 @@ const helloWorldServer = http.createServer((req, res) => {
 // });
 
 //Test data module
-console.log(await data.read(
-  "test",
-  "newFile1"
-))
+data.delete("test", "newFile2");
