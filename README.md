@@ -27,3 +27,6 @@ Cli commands
 - code to create certificate and keys for development:
   openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem
   Ensure you have openssl installed (for windows: Download from here - https://slproweb.com/products/Win32OpenSSL.html?form=MG0AV3 ).
+
+  adresses can be reached like this with post man:
+  localhost:4190/users?phone=12345678990
