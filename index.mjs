@@ -4,7 +4,8 @@ import url from "node:url";
 import { StringDecoder } from "node:string_decoder";
 import { env } from "./config.mjs";
 import fs from "fs/promises";
-
+import { handler } from "./lib/handlers.mjs";
+import { helpers } from "./lib/helpers.mjs";
 // Initiate HTTP server
 const httpServer = http.createServer(async (req, res) => {
   await universalServerHandler(req, res);
@@ -62,21 +63,22 @@ const universalServerHandler = async (req, res) => {
     "query string": queryString,
     method: method,
     headers: reqHeader,
-    payload: payload,
+    payload: helpers.parseToObject(payload),
   };
 
-  const handler = {
-    sample: async (data) => [200, { name: data }],
-    foo: async () => [404, { Alert: "page is under development" }],
-    notFound: async () => [404],
-    ping: async () => [200],
-  };
+  // const handler = {
+  //   sample: async (data) => [200, { name: data }],
+  //   foo: async () => [404, { Alert: "page is under development" }],
+  //   notFound: async () => [404],
+  //   ping: async () => [200],
+  // };
 
   const routes = {
     sample: handler.sample,
     notFound: handler.notFound,
     ping: handler.ping,
     foo: handler.foo,
+    users:handler.users
   };
   const chooseHandler =
     typeof routes[trimmedUrl] !== "undefined"
