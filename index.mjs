@@ -59,8 +59,8 @@ const universalServerHandler = async (req, res) => {
 
   // Store data we wish to send to our chosen handler
   const data = {
-    "trimmed path": trimmedUrl,
-    "query string": queryString,
+    trimmedPath: trimmedUrl,
+    queryString: queryString,
     method: method,
     headers: reqHeader,
     payload: helpers.parseToObject(payload),
@@ -78,7 +78,7 @@ const universalServerHandler = async (req, res) => {
     notFound: handler.notFound,
     ping: handler.ping,
     foo: handler.foo,
-    users:handler.users
+    users: handler.users,
   };
   const chooseHandler =
     typeof routes[trimmedUrl] !== "undefined"
