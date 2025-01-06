@@ -6,6 +6,10 @@ import { env } from "./config.mjs";
 import fs from "fs/promises";
 import { handler } from "./lib/handlers.mjs";
 import { helpers } from "./lib/helpers.mjs";
+
+/*This page we create and run our servers: http and https. 
+Handle the servers request and responses based on the users url path, method and other parameters i.e( route)*/
+
 // Initiate HTTP server
 const httpServer = http.createServer(async (req, res) => {
   await universalServerHandler(req, res);
@@ -15,7 +19,7 @@ httpServer.listen(env.httpPort, () => {
   console.log(`Now listening on Http port: ${env.httpPort}`);
 });
 
-// Options for HTTPS server
+// Cert keys for HTTPS server
 const httpsServerOptions = {
   key: await fs.readFile("./https/key.pem"),
   cert: await fs.readFile("./https/cert.pem"),
@@ -29,7 +33,7 @@ httpsServer.listen(env.httpsPort, () => {
   console.log(`Now listening on Https port: ${env.httpsPort}`);
 });
 
-// Handle server requests and responses
+// Handle server request and responses
 const universalServerHandler = async (req, res) => {
   // Get the request URL
   const activeUrl = req.url;
@@ -41,7 +45,7 @@ const universalServerHandler = async (req, res) => {
   const decoder = new StringDecoder("utf8");
   // Get the payload
   let payload = ""; // Variable to store the payload
-
+  // Decode payload
   for await (const chunk of req) {
     payload += decoder.write(chunk);
   }
@@ -66,19 +70,13 @@ const universalServerHandler = async (req, res) => {
     payload: helpers.parseToObject(payload),
   };
 
-  // const handler = {
-  //   sample: async (data) => [200, { name: data }],
-  //   foo: async () => [404, { Alert: "page is under development" }],
-  //   notFound: async () => [404],
-  //   ping: async () => [200],
-  // };
-
   const routes = {
     sample: handler.sample,
     notFound: handler.notFound,
     ping: handler.ping,
     foo: handler.foo,
     users: handler.users,
+    tokens: handler.tokens,
   };
   const chooseHandler =
     typeof routes[trimmedUrl] !== "undefined"
