@@ -26,11 +26,18 @@ export const valiateData = async (data) => {
       ? data.payload.tosAgreement
       : false;
 
+  const tokenIdfromQuery =
+    typeof data.queryString.id == "string" &&
+    data.queryString.id.trim().length == 20
+      ? data.queryString.id.trim()
+      : false;
+
   return {
     firstName: firstName,
     lastName: lastName,
     phone: phone,
     password: password,
     tosAgreement: tosAgreement,
+    id: tokenIdfromQuery,
   };
 };
