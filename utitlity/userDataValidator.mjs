@@ -32,6 +32,11 @@ export const valiateData = async (data) => {
       ? data.queryString.id.trim()
       : false;
 
+  const extend =
+    typeof data.payload.extend == "boolean" && data.payload.extend == true
+      ? true
+      : false;
+
   return {
     firstName: firstName,
     lastName: lastName,
@@ -39,5 +44,6 @@ export const valiateData = async (data) => {
     password: password,
     tosAgreement: tosAgreement,
     id: tokenIdfromQuery,
+    extend: extend,
   };
 };
